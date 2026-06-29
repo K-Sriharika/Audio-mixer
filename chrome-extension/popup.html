@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 300px; padding: 16px; font-family: sans-serif; background: #0f0f0f; color: #fff; }
+  h2 { font-size: 1rem; margin-bottom: 2px; }
+  p.sub { font-size: 0.73rem; color: #666; margin-bottom: 14px; }
+  #status { font-size: 0.78rem; padding: 8px 10px; background: #1a1a1a; border-radius: 6px; min-height: 1.8rem; margin-bottom: 14px; color: #aaa; }
+  #status.ok { color: #6f6; }
+  #status.err { color: #f66; background: #1f0a0a; }
+  .slider-row { margin-bottom: 13px; }
+  .slider-row label { display: flex; justify-content: space-between; font-size: 0.82rem; color: #ccc; margin-bottom: 5px; }
+  .slider-row label span { color: #7c6fff; font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: #7c6fff; cursor: pointer; }
+  .divider { border-top: 1px solid #222; margin: 12px 0; }
+  button { width: 100%; padding: 11px; border: none; border-radius: 8px; font-size: 0.9rem; cursor: pointer; margin-bottom: 7px; }
+  #start-btn { background: #7c6fff; color: #fff; }
+  #start-btn:disabled { background: #2a2a2a; color: #666; }
+  #stop-btn { background: transparent; color: #666; border: 1px solid #333; font-size: 0.82rem; }
+  .note { font-size: 0.68rem; color: #555; line-height: 1.5; padding-top: 8px; border-top: 1px solid #1a1a1a; }
+</style>
+</head>
+<body>
+  <h2>🎙 VoiceFront</h2>
+  <p class="sub">Boost dialogue, reduce background noise</p>
+
+  <div id="status">Play a stereo video/song, then Start</div>
+
+  <div class="slider-row">
+    <label>🎙 Voice <span id="voice-val">100%</span></label>
+    <input type="range" id="voice" min="0" max="200" value="100">
+  </div>
+  <div class="slider-row">
+    <label>🎵 Background <span id="bgm-val">100%</span></label>
+    <input type="range" id="bgm" min="0" max="200" value="100">
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="slider-row">
+    <label>🎯 Sharpness <span id="sharp-val">3</span></label>
+    <input type="range" id="sharp" min="1" max="6" step="0.5" value="3">
+  </div>
+
+  <button id="start-btn">▶ Start</button>
+  <button id="stop-btn">⏹ Stop</button>
+
+  <div class="note">Sharpness up = tighter voice, more artifacts.<br>Sharpness down = fuller sound, more bleed.<br>Find the sweet spot per track.</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

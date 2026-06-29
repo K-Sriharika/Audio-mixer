@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Mixer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    p.sub { color: #888; margin-bottom: 2rem; font-size: 0.95rem; }
+
+    #drop-zone {
+      border: 2px dashed #444;
+      border-radius: 16px;
+      padding: 3rem 4rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 500px;
+    }
+    #drop-zone:hover, #drop-zone.dragover { border-color: #7c6fff; }
+    #drop-zone p { color: #888; margin-top: 0.5rem; font-size: 0.9rem; }
+
+    #status {
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      color: #aaa;
+      min-height: 1.5rem;
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid #555;
+      border-top-color: #7c6fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #mixer {
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 500px;
+      background: #1a1a1a;
+      border-radius: 16px;
+      padding: 2rem;
+    }
+    .slider-row { display: flex; flex-direction: column; gap: 0.5rem; }
+    .slider-row label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      color: #ccc;
+    }
+    .slider-row label span { color: #7c6fff; font-weight: 600; }
+    input[type=range] {
+      width: 100%;
+      accent-color: #7c6fff;
+      height: 6px;
+      cursor: pointer;
+    }
+    #play-btn {
+      background: #7c6fff;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.85rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #play-btn:hover { background: #6455e0; }
+    #reset-btn {
+      background: transparent;
+      color: #666;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 0.6rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    #reset-btn:hover { color: #aaa; border-color: #555; }
+  </style>
+</head>
+<body>
+
+  <h1>🎚 Audio Mixer</h1>
+  <p class="sub">Separate voice and background music — control them independently</p>
+
+  <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <div style="font-size:2.5rem">🎵</div>
+    <strong>Drop your audio or video file here</strong>
+    <p>or click to browse — MP3, MP4, WAV supported</p>
+    <input type="file" id="file-input" accept="audio/*,video/*" style="display:none">
+  </div>
+
+  <div id="status"></div>
+
+  <div id="mixer">
+    <div class="slider-row">
+      <label>🎙 Voice <span id="voice-val">100%</span></label>
+      <input type="range" id="voice" min="0" max="200" value="100">
+    </div>
+    <div class="slider-row">
+      <label>🎵 Background Music <span id="bgm-val">100%</span></label>
+      <input type="range" id="bgm" min="0" max="200" value="100">
+    </div>
+    <div class="slider-row">
+      <label style="justify-content:space-between">
+        <span>⏱ Seek</span>
+        <span id="time-display" style="color:#888;font-size:0.85rem">0:00 / 0:00</span>
+      </label>
+      <input type="range" id="seek" min="0" max="1000" value="0">
+    </div>
+    <button id="play-btn">▶ Play</button>
+    <button id="reset-btn">Upload another file</button>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const status   = document.getElementById('status');
+    const mixer    = document.getElementById('mixer');
+
+    let vocalsBuffer = null, bgmBuffer = null;
+    let audioCtx = null;
+    let playingSources = [];
+    let vocalsGain = null, bgmGain = null;
+    let isPlaying = false;
+    let startTime = 0, startOffset = 0;
+    let rafId = null;
+
+    // ── drag & drop ──────────────────────────────────────────────────────────
+    dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault(); dropZone.classList.remove('dragover');
+      handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+    // ── file upload & processing ─────────────────────────────────────────────
+    async function handleFile(file) {
+      if (!file) return;
+
+      // Tear down any previous session
+      cancelAnimationFrame(rafId);
+      stopSources();
+      isPlaying = false; startOffset = 0;
+      vocalsGain = null; bgmGain = null;
+      vocalsBuffer = null; bgmBuffer = null;
+      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+
+      // Create AudioContext NOW, while the user gesture is still active
+      audioCtx = new AudioContext();
+      mixer.style.display = 'none';
+      dropZone.style.display = 'none';
+      status.innerHTML = '<span class="spinner"></span>Uploading and separating audio… (takes ~30–60 s)';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('http://localhost:8000/separate', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        status.innerHTML = '<span class="spinner"></span>Decoding audio stems…';
+        vocalsBuffer = await decodeBase64(data.vocals);
+        bgmBuffer    = await decodeBase64(data.bgm);
+
+        // Reset UI state for the new file
+        startOffset = 0;
+        resetSliders();
+        updateSeekBar();
+        status.textContent = '✅ Ready! Adjust sliders and press Play.';
+        mixer.style.display = 'flex';
+      } catch (err) {
+        status.textContent = '❌ Error: ' + err.message;
+        if (audioCtx) { audioCtx.close(); audioCtx = null; }
+        dropZone.style.display = 'block';
+      }
+    }
+
+    async function decodeBase64(b64) {
+      const bin = atob(b64);
+      const buf = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+      return audioCtx.decodeAudioData(buf.buffer);
+    }
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+    function getDuration()   { return vocalsBuffer ? vocalsBuffer.duration : 0; }
+    function getCurrentTime() {
+      if (!isPlaying) return startOffset;
+      return Math.min(startOffset + (audioCtx.currentTime - startTime), getDuration());
+    }
+
+    function stopSources() {
+      // Null out onended BEFORE stopping to prevent stale callbacks firing
+      playingSources.forEach(s => { s.onended = null; try { s.stop(); } catch(e) {} });
+      playingSources = [];
+    }
+
+    function resetSliders() {
+      ['voice','bgm'].forEach(id => {
+        document.getElementById(id).value = 100;
+        document.getElementById(id + '-val').textContent = '100%';
+      });
+    }
+
+    // ── playback ─────────────────────────────────────────────────────────────
+    // Slider value 0–200 maps to gain 0.0–1.0 (so two stems at 100% = combined 1.0, no clipping)
+    function sliderToGain(v) { return v / 200; }
+
+    function playFrom(offset) {
+      stopSources();
+
+      startOffset = Math.max(0, Math.min(offset, getDuration()));
+      startTime   = audioCtx.currentTime;
+
+      vocalsGain = audioCtx.createGain();
+      vocalsGain.gain.value = sliderToGain(document.getElementById('voice').value);
+      bgmGain = audioCtx.createGain();
+      bgmGain.gain.value = sliderToGain(document.getElementById('bgm').value);
+
+      [
+        { buffer: vocalsBuffer, gain: vocalsGain },
+        { buffer: bgmBuffer,    gain: bgmGain   }
+      ].forEach(({ buffer, gain }) => {
+        const src = audioCtx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.start(0, startOffset);
+        playingSources.push(src);
+      });
+
+      // Natural end of track
+      playingSources[0].onended = () => {
+        if (isPlaying && getCurrentTime() >= getDuration() - 0.25) {
+          isPlaying = false;
+          startOffset = 0;
+          playingSources = [];
+          document.getElementById('play-btn').textContent = '▶ Play';
+          document.getElementById('play-btn').onclick = playStems;
+          updateSeekBar();
+        }
+      };
+
+      isPlaying = true;
+      document.getElementById('play-btn').textContent = '⏹ Stop';
+      document.getElementById('play-btn').onclick = stopPlayback;
+      scheduleSeekUpdate();
+    }
+
+    async function playStems() {
+      try {
+        await audioCtx.resume();
+        playFrom(startOffset);
+      } catch(err) {
+        status.textContent = '❌ Playback error: ' + err.message;
+      }
+    }
+
+    function stopPlayback() {
+      startOffset = getCurrentTime();
+      stopSources();
+      isPlaying = false;
+      cancelAnimationFrame(rafId);
+      document.getElementById('play-btn').textContent = '▶ Play';
+      document.getElementById('play-btn').onclick = playStems;
+      updateSeekBar();
+    }
+
+    // ── seek bar ─────────────────────────────────────────────────────────────
+    function scheduleSeekUpdate() {
+      cancelAnimationFrame(rafId);
+      (function tick() {
+        updateSeekBar();
+        if (isPlaying) rafId = requestAnimationFrame(tick);
+      })();
+    }
+
+    function updateSeekBar() {
+      const dur = getDuration(), cur = getCurrentTime();
+      document.getElementById('seek').value = dur > 0 ? (cur / dur) * 1000 : 0;
+      document.getElementById('time-display').textContent = fmt(cur) + ' / ' + fmt(dur);
+    }
+
+    function fmt(s) {
+      return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+    }
+
+    document.getElementById('seek').addEventListener('input', function() {
+      const t = (this.value / 1000) * getDuration();
+      startOffset = t;
+      document.getElementById('time-display').textContent = fmt(t) + ' / ' + fmt(getDuration());
+    });
+    document.getElementById('seek').addEventListener('change', function() {
+      const t = (this.value / 1000) * getDuration();
+      if (isPlaying) playFrom(t); else { startOffset = t; updateSeekBar(); }
+    });
+
+    // ── volume sliders (live update while playing) ───────────────────────────
+    document.getElementById('play-btn').onclick = playStems;
+
+    document.getElementById('voice').oninput = function() {
+      document.getElementById('voice-val').textContent = this.value + '%';
+      if (vocalsGain) vocalsGain.gain.value = sliderToGain(this.value);
+    };
+    document.getElementById('bgm').oninput = function() {
+      document.getElementById('bgm-val').textContent = this.value + '%';
+      if (bgmGain) bgmGain.gain.value = sliderToGain(this.value);
+    };
+
+    // ── reset ────────────────────────────────────────────────────────────────
+    document.getElementById('reset-btn').onclick = () => {
+      stopPlayback();
+      vocalsBuffer = null; bgmBuffer = null;
+      vocalsGain = null; bgmGain = null;
+      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+      resetSliders();
+      mixer.style.display = 'none';
+      dropZone.style.display = 'block';
+      status.textContent = '';
+      fileInput.value = '';
+    };
+  </script>
+</body>
+</html>
