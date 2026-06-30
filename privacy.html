@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — VoiceFront</title>
+<style>
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 60px 28px 100px;
+    line-height: 1.7;
+    color: #0c1a17;
+    background: #ffffff;
+  }
+  h1{ font-size: 1.8rem; margin-bottom: 6px; }
+  .updated{ color: #6b7672; font-size: 0.9rem; margin-bottom: 36px; }
+  h2{ font-size: 1.2rem; margin-top: 36px; margin-bottom: 10px; }
+  p{ margin-bottom: 14px; color: #2e4a4e; }
+  ul{ margin: 0 0 14px 22px; color: #2e4a4e; }
+  li{ margin-bottom: 6px; }
+  a{ color: #0f9b8e; }
+  .back{ display:inline-block; margin-bottom: 30px; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+  <a class="back" href="https://k-sriharika.github.io/VoiceFront/">← Back to VoiceFront</a>
+
+  <h1>Privacy Policy</h1>
+  <div class="updated">Last updated: June 2026</div>
+
+  <p>VoiceFront is a free, open-source Chrome extension built and maintained by K. Sriharika. This policy explains exactly what the extension does and does not do with your data.</p>
+
+  <h2>What VoiceFront does</h2>
+  <p>VoiceFront captures the audio of the browser tab you are currently watching, using Chrome's <code>tabCapture</code> API, and processes it locally inside your browser to separate dialogue from background music or noise. This processing happens through standard Web Audio APIs (AudioContext, AudioWorklet) entirely on your own device.</p>
+
+  <h2>What data is collected</h2>
+  <p>VoiceFront does not collect, store, log, or transmit any of the following:</p>
+  <ul>
+    <li>Personally identifiable information (name, email, address, etc.)</li>
+    <li>The audio or video content you are watching</li>
+    <li>Your browsing history or the websites you visit</li>
+    <li>Location, IP address, or device identifiers</li>
+    <li>Authentication credentials, passwords, or financial information</li>
+    <li>Keystrokes, clicks, or any other activity tracking</li>
+  </ul>
+
+  <h2>Where audio processing happens</h2>
+  <p>All audio analysis and mixing happens in real time, in memory, inside your browser. Nothing is uploaded, saved to disk, or sent to any external server. There is no backend server associated with this extension. When you close the tab or stop the extension, the audio session ends and nothing is retained.</p>
+
+  <h2>Third-party services</h2>
+  <p>VoiceFront does not integrate with any third-party analytics, advertising, or tracking services within the extension itself. The extension's source code is fully open and publicly viewable on <a href="https://github.com/K-Sriharika/VoiceFront" target="_blank" rel="noopener">GitHub</a>.</p>
+
+  <h2>Permissions used</h2>
+  <p><strong>tabCapture</strong> — required to access the audio stream of the active tab, which is the core function of the extension.</p>
+  <p><strong>offscreen</strong> — required to keep audio processing running in the background independent of the popup window, so playback isn't interrupted when you close the popup.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes, the update will be reflected on this page with a new "last updated" date. Since VoiceFront is open source, any change in behavior is also visible directly in the public source code.</p>
+
+  <h2>Contact</h2>
+  <p>For questions about this policy or the extension, open an issue on <a href="https://github.com/K-Sriharika/VoiceFront/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+
+</body>
+</html>
