@@ -8,16 +8,16 @@
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
 
   :root{
-    --bg: ##90e0ef;
+    --bg: #90e0ef;
     --panel: #ffffff;
-    --panel-2: #eef3f1;
-    --line: rgba(8,20,18,0.10);
+    --panel-2: #eaf7f9;
+    --line: rgba(8,20,18,0.12);
     --text: #0c1a17;
-    --text-dim: #4d5d59;
-    --text-faint: #8a9794;
+    --text-dim: #2e4a4e;
+    --text-faint: #4d6b6f;
     --teal: #0f9b8e;
     --teal-soft: #d6f3ee;
-    --blue: #2c6fb8;
+    --blue: #0077b6;
     --blue-soft: #dbe9f8;
     --grad: linear-gradient(90deg, var(--teal), var(--blue));
   }
@@ -57,7 +57,7 @@
   /* ---------- nav ---------- */
   nav{
     position:sticky; top:0; z-index:50;
-    background:rgba(245,247,246,0.9);
+    background:rgba(144,224,239,0.85);
     backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line);
   }
@@ -469,10 +469,61 @@
     <div class="left">
       <img src="https://raw.githubusercontent.com/K-Sriharika/VoiceFront/main/chrome-extension/icons/icon48.png" alt="VoiceFront logo" style="width:16px;height:16px;">
       Built by K. Sriharika · MIT Licensed · Runs entirely in real time, in your browser
-      <img src="https://visitor-badge.laobi.icu/badge?page_id=K-Sriharika.VoiceFront" alt="visitor count" style="height:20px; vertical-align:middle;">
     </div>
   </div>
 </footer>
+
+<!-- Unique visitor counter -->
+<div id="visitorCounter" style="
+  position: fixed; bottom: 18px; right: 18px; z-index: 100;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 100px;
+  background: rgba(12,26,23,.92); backdrop-filter: blur(10px);
+  border: 1px solid #0f9b8e; font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; letter-spacing: .04em;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25), 0 0 0 4px rgba(15,155,142,0.15);
+  color: #eef2f1;
+">
+  <span style="width:7px; height:7px; border-radius:50%; background:#0f9b8e; box-shadow:0 0 8px #0f9b8e; animation:pulse 1.8s ease-in-out infinite; flex-shrink:0;"></span>
+  <span style="color:#9aa6a4;">visitors</span>
+  <span id="visitorCount" style="color:#0f9b8e; font-weight:600;">...</span>
+</div>
+
+<script>
+(function(){
+  var el = document.getElementById('visitorCount');
+  var uniqueKey = 'voicefront_site_unique_devices_v1';
+  var storageKey = 'voicefront_visited_v1';
+
+  var hasVisited = false;
+  try { hasVisited = !!localStorage.getItem(storageKey); } catch(e) { hasVisited = false; }
+
+  var endpoint = hasVisited
+    ? 'https://countapi.mileshilliard.com/api/v1/get/' + uniqueKey
+    : 'https://countapi.mileshilliard.com/api/v1/hit/' + uniqueKey;
+
+  fetch(endpoint)
+    .then(function(res){
+      if(res.status === 404){
+        return fetch('https://countapi.mileshilliard.com/api/v1/hit/' + uniqueKey)
+          .then(function(r){ return r.json(); });
+      }
+      return res.json();
+    })
+    .then(function(data){
+      if(data && data.value != null){
+        el.textContent = parseInt(data.value, 10).toLocaleString();
+        if(!hasVisited){ try { localStorage.setItem(storageKey, '1'); } catch(e){} }
+      } else {
+        el.textContent = '1';
+      }
+    })
+    .catch(function(err){
+      console.warn('Visitor counter fallback:', err);
+      el.textContent = '1';
+    });
+})();
+</script>
 
 </body>
 </html>
