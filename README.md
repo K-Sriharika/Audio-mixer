@@ -22,6 +22,12 @@ Everything runs inside the browser. No AI models, no cloud, no latency.
 
 ---
 
+### 🎬 See it in action
+
+https://github.com/user-attachments/assets/4bea47b7-9f7e-48f8-902b-123e90334225
+
+---
+
 ## Install
 
 1. Click the green **Code** button above → **Download ZIP** → unzip
