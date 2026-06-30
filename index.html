@@ -3,19 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoiceFront — Hear the dialogue. Silence the noise.</title>
+<title>VoiceFront — Real-time dialogue, no more buried in noise</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
 
   :root{
-    --bg: #0b0f10;
-    --bg-2: #11171a;
-    --line: rgba(255,255,255,0.08);
-    --text: #eef2f1;
-    --text-dim: #9aa6a4;
-    --text-faint: #5d6968;
-    --teal: #2dd4bf;
-    --blue: #3b8add;
+    --bg: #f5f7f6;
+    --panel: #ffffff;
+    --panel-2: #eef3f1;
+    --line: rgba(8,20,18,0.10);
+    --text: #0c1a17;
+    --text-dim: #4d5d59;
+    --text-faint: #8a9794;
+    --teal: #0f9b8e;
+    --teal-soft: #d6f3ee;
+    --blue: #2c6fb8;
+    --blue-soft: #dbe9f8;
     --grad: linear-gradient(90deg, var(--teal), var(--blue));
   }
 
@@ -27,264 +30,190 @@
     font-family:'Inter', sans-serif;
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
   }
-  ::selection{ background:var(--teal); color:#04201c; }
-
-  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; font-weight:600; letter-spacing:-0.02em; }
+  ::selection{ background:var(--teal); color:#fff; }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; font-weight:600; letter-spacing:-0.01em; }
   .mono{ font-family:'IBM Plex Mono', monospace; }
-
-  .wrap{ max-width:1080px; margin:0 auto; padding:0 28px; }
-
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 28px; }
   a{ color:inherit; text-decoration:none; }
+  img{ max-width:100%; display:block; }
+
+  /* ---------- live badge ---------- */
+  .live-badge{
+    display:inline-flex; align-items:center; gap:7px;
+    background:var(--teal-soft); color:#066358;
+    border:1px solid rgba(15,155,142,0.25);
+    padding:6px 13px; border-radius:99px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.74rem; font-weight:500; letter-spacing:0.04em;
+    text-transform:uppercase;
+  }
+  .live-badge .dot{
+    width:7px; height:7px; border-radius:50%; background:#0f9b8e;
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(15,155,142,0.5);} 50%{ box-shadow:0 0 0 5px rgba(15,155,142,0);} }
 
   /* ---------- nav ---------- */
   nav{
     position:sticky; top:0; z-index:50;
-    background:rgba(11,15,16,0.85);
+    background:rgba(245,247,246,0.9);
     backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line);
   }
-  nav .wrap{
-    display:flex; align-items:center; justify-content:space-between;
-    height:64px;
-  }
+  nav .wrap{ display:flex; align-items:center; justify-content:space-between; height:64px; }
   .brand{ display:flex; align-items:center; gap:10px; font-weight:600; font-size:1rem; }
-  .brand-mark{ width:22px; height:22px; }
-  nav .links{ display:flex; gap:28px; font-size:0.88rem; color:var(--text-dim); }
+  .brand-mark{ width:24px; height:24px; }
+  nav .links{ display:flex; gap:26px; font-size:0.86rem; color:var(--text-dim); }
   nav .links a:hover{ color:var(--text); }
-  .nav-cta{
-    font-size:0.82rem; padding:8px 16px; border-radius:7px;
-    background:var(--text); color:#08100f; font-weight:600;
-  }
   @media(max-width:680px){ nav .links{ display:none; } }
 
   /* ---------- hero ---------- */
-  .hero{
-    padding:96px 0 64px;
-    position:relative;
-  }
-  .eyebrow{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.74rem;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    color:var(--teal);
-    display:flex; align-items:center; gap:8px;
-    margin-bottom:22px;
-  }
-  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--teal); box-shadow:0 0 8px var(--teal); }
-
+  .hero{ padding:64px 0 0; }
   .hero h1{
-    font-size:clamp(2.4rem, 6vw, 4.4rem);
-    line-height:1.04;
-    max-width:880px;
-    margin-bottom:26px;
+    font-size:clamp(2.2rem, 5vw, 3.6rem);
+    line-height:1.06;
+    max-width:760px;
+    margin-bottom:20px;
   }
-  /* noise-to-clear text trick */
-  .noisy{ position:relative; display:inline-block; }
-  .noisy .clean{ background:linear-gradient(90deg,#fff,#fff); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .noisy .ghost{
-    position:absolute; left:0; top:0; width:100%; height:100%;
-    color:var(--text-faint);
-    opacity:0.5;
-    filter:blur(0.4px);
-    animation:jitter 2.6s steps(2,end) infinite;
-    pointer-events:none;
+  .hero h1 .accent{
+    background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;
   }
-  @keyframes jitter{
-    0%,100%{ transform:translate(0,0); opacity:0.45; }
-    25%{ transform:translate(1.5px,-1px); opacity:0.25; }
-    50%{ transform:translate(-1px,1px); opacity:0.5; }
-    75%{ transform:translate(1px,0.5px); opacity:0.3; }
-  }
-
-  .hero p.lede{
-    font-size:1.12rem;
-    color:var(--text-dim);
-    max-width:560px;
-    margin-bottom:36px;
-  }
-  .hero p.lede strong{ color:var(--text); font-weight:500; }
-
-  .cta-row{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:18px; }
+  .hero p.lede{ font-size:1.06rem; color:var(--text-dim); max-width:580px; margin-bottom:30px; }
+  .hero p.lede strong{ color:var(--text); font-weight:600; }
+  .cta-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
   .btn{
     display:inline-flex; align-items:center; gap:8px;
     padding:13px 22px; border-radius:9px;
     font-weight:600; font-size:0.92rem;
-    transition:transform 0.15s ease, opacity 0.15s ease;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
   }
   .btn:hover{ transform:translateY(-1px); }
-  .btn-primary{ background:var(--grad); color:#04201c; }
-  .btn-ghost{ border:1px solid var(--line); color:var(--text); }
+  .btn-primary{ background:var(--grad); color:#fff; box-shadow:0 6px 20px rgba(15,155,142,0.25); }
+  .btn-ghost{ border:1px solid var(--line); color:var(--text); background:var(--panel); }
   .btn-ghost:hover{ border-color:var(--text-faint); }
-  .hero-note{ font-size:0.8rem; color:var(--text-faint); }
+  .hero-note{ font-size:0.8rem; color:var(--text-faint); margin-bottom:40px; }
 
-  /* ---------- slider mockup ---------- */
-  .mixer-demo{
-    margin-top:64px;
-    border:1px solid var(--line);
-    border-radius:16px;
-    background:linear-gradient(180deg, var(--bg-2), var(--bg));
-    padding:28px;
-    max-width:520px;
+  /* ---------- hero visual row: screenshot + video side by side ---------- */
+  .hero-media{
+    display:grid; grid-template-columns:1fr 1fr; gap:18px;
+    margin-bottom:8px;
   }
-  .mixer-demo .row{ margin-bottom:18px; }
-  .mixer-demo .row:last-child{ margin-bottom:0; }
-  .mixer-demo label{
-    display:flex; justify-content:space-between;
-    font-size:0.85rem; color:var(--text-dim); margin-bottom:8px;
+  @media(max-width:820px){ .hero-media{ grid-template-columns:1fr; } }
+  .media-card{
+    border:1px solid var(--line); border-radius:16px; overflow:hidden;
+    background:var(--panel);
+    box-shadow:0 1px 2px rgba(8,20,18,0.04);
   }
-  .mixer-demo label .val{ color:var(--teal); font-family:'IBM Plex Mono', monospace; font-size:0.8rem; }
-  .track{ height:5px; border-radius:3px; background:rgba(255,255,255,0.08); position:relative; overflow:hidden; }
-  .track .fill{ position:absolute; left:0; top:0; height:100%; border-radius:3px; }
-  .fill-teal{ background:var(--teal); }
-  .fill-blue{ background:var(--blue); opacity:0.55; }
-
-  /* ---------- section shared ---------- */
-  section{ padding:84px 0; border-top:1px solid var(--line); }
-  .section-head{ max-width:620px; margin-bottom:48px; }
-  .section-head .eyebrow{ margin-bottom:14px; }
-  .section-head h2{ font-size:clamp(1.7rem,3.4vw,2.4rem); margin-bottom:14px; }
-  .section-head p{ color:var(--text-dim); font-size:1.02rem; }
-
-  /* ---------- demo video ---------- */
-  .demo-frame{
-    border-radius:16px; overflow:hidden;
-    border:1px solid var(--line);
-    background:#000;
+  .media-card .label{
+    padding:12px 16px; font-size:0.78rem; color:var(--text-faint);
+    border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+    display:flex; justify-content:space-between; align-items:center;
   }
-  .demo-frame video{ width:100%; display:block; }
-
-  /* ---------- how it works ---------- */
-  .how-grid{
-    display:grid; grid-template-columns:1fr 1fr; gap:48px;
-    align-items:start;
+  .media-card video, .media-card img{ width:100%; display:block; background:#000; }
+  .video-fallback{
+    font-size:0.78rem; padding:10px 16px; color:var(--text-dim);
+    border-top:1px solid var(--line); background:var(--panel-2);
   }
-  @media(max-width:760px){ .how-grid{ grid-template-columns:1fr; } }
+  .video-fallback a{ color:var(--teal); font-weight:600; }
 
+  /* ---------- quadrant grid (replaces long scroll) ---------- */
+  .quad-section{ padding:64px 0; }
+  .quad-head{ max-width:640px; margin-bottom:36px; }
+  .quad-head .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:0.74rem;
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--teal);
+    margin-bottom:10px; display:block;
+  }
+  .quad-head h2{ font-size:clamp(1.5rem,3vw,2.1rem); margin-bottom:10px; }
+  .quad-head p{ color:var(--text-dim); }
+
+  .quadrants{
+    display:grid; grid-template-columns:1fr 1fr; gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:16px;
+    overflow:hidden;
+  }
+  @media(max-width:760px){ .quadrants{ grid-template-columns:1fr; } }
+  .quad{ background:var(--panel); padding:30px 28px; }
+  .quad .qnum{ font-family:'IBM Plex Mono', monospace; color:var(--teal); font-size:0.78rem; margin-bottom:10px; display:block; }
+  .quad h3{ font-size:1.08rem; margin-bottom:8px; }
+  .quad p{ color:var(--text-dim); font-size:0.92rem; }
+
+  /* mechanism quadrant gets the stereo art */
   .stereo-art{
-    border:1px solid var(--line); border-radius:14px;
-    background:var(--bg-2);
-    padding:32px 20px;
+    border-radius:12px; background:var(--panel-2); height:170px;
     display:flex; align-items:center; justify-content:center;
-    height:280px;
-    position:relative;
+    position:relative; margin-bottom:16px;
   }
   .field-line{ position:absolute; left:14%; right:14%; top:50%; height:1px; background:var(--line); }
   .speaker{
     position:absolute; top:50%; transform:translateY(-50%);
-    width:34px; height:46px; border:1px solid var(--text-faint); border-radius:6px;
+    width:28px; height:38px; border:1px solid var(--text-faint); border-radius:6px;
     display:flex; align-items:center; justify-content:center;
-    font-family:'IBM Plex Mono', monospace; font-size:0.7rem; color:var(--text-faint);
+    font-family:'IBM Plex Mono', monospace; font-size:0.66rem; color:var(--text-faint);
   }
-  .speaker.l{ left:10%; } .speaker.r{ right:10%; }
+  .speaker.l{ left:8%; } .speaker.r{ right:8%; }
   .blob{ position:absolute; border-radius:50%; top:50%; transform:translateY(-50%); }
-  .blob-music{ background:var(--blue); opacity:0.35; }
+  .blob-music{ background:var(--blue); opacity:0.25; }
   .blob-voice{
-    background:var(--teal); opacity:0.92;
+    background:var(--teal); opacity:0.9;
     display:flex; align-items:center; justify-content:center;
-    font-family:'IBM Plex Mono', monospace; font-size:0.66rem; color:#04201c; font-weight:600;
+    font-family:'IBM Plex Mono', monospace; font-size:0.62rem; color:#fff; font-weight:600;
     left:50%; transform:translate(-50%,-50%);
   }
 
-  .step-list{ counter-reset:step; }
-  .step{
-    display:flex; gap:18px; padding:20px 0;
-    border-bottom:1px solid var(--line);
-  }
-  .step:last-child{ border-bottom:none; }
-  .step-num{
-    font-family:'IBM Plex Mono', monospace; color:var(--teal);
-    font-size:0.85rem; min-width:28px;
-  }
-  .step h3{ font-size:1.02rem; margin-bottom:6px; font-weight:600; }
-  .step p{ color:var(--text-dim); font-size:0.92rem; }
+  /* controls mockup quadrant */
+  .mixer-demo .row{ margin-bottom:14px; }
+  .mixer-demo .row:last-child{ margin-bottom:0; }
+  .mixer-demo label{ display:flex; justify-content:space-between; font-size:0.82rem; color:var(--text-dim); margin-bottom:6px; }
+  .mixer-demo label .val{ color:var(--teal); font-family:'IBM Plex Mono', monospace; font-size:0.78rem; }
+  .track{ height:5px; border-radius:3px; background:var(--panel-2); position:relative; overflow:hidden; }
+  .track .fill{ position:absolute; left:0; top:0; height:100%; border-radius:3px; }
+  .fill-teal{ background:var(--teal); }
+  .fill-blue{ background:var(--blue); opacity:0.6; }
 
-  /* ---------- use cases ---------- */
-  .use-grid{
-    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
-    background:var(--line);
-    border:1px solid var(--line);
-    border-radius:14px;
-    overflow:hidden;
-  }
-  @media(max-width:760px){ .use-grid{ grid-template-columns:1fr; } }
-  .use-card{ background:var(--bg); padding:30px 26px; }
-  .use-card .icon{ font-size:1.4rem; margin-bottom:14px; display:block; }
-  .use-card h3{ font-size:1.02rem; margin-bottom:8px; }
-  .use-card p{ color:var(--text-dim); font-size:0.9rem; }
+  /* use-case quadrant: compact list, no repeated card chrome */
+  .use-list{ display:flex; flex-direction:column; gap:14px; }
+  .use-row{ display:flex; gap:12px; align-items:flex-start; }
+  .use-row .ico{ font-size:1.1rem; line-height:1.4; }
+  .use-row .t{ font-size:0.92rem; }
+  .use-row .t strong{ font-weight:600; }
+  .use-row .t span{ color:var(--text-dim); }
 
-  /* ---------- controls ---------- */
-  .controls-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-  @media(max-width:760px){ .controls-grid{ grid-template-columns:1fr; } }
-  .ctrl-card{
-    border:1px solid var(--line); border-radius:14px; padding:26px;
-    background:var(--bg-2);
-  }
-  .ctrl-card .tag{
-    font-family:'IBM Plex Mono', monospace; font-size:0.72rem;
-    color:var(--teal); text-transform:uppercase; letter-spacing:0.08em;
-    margin-bottom:12px; display:block;
-  }
-  .ctrl-card h3{ font-size:1.1rem; margin-bottom:8px; }
-  .ctrl-card p{ color:var(--text-dim); font-size:0.88rem; }
+  /* install quadrant */
+  .install-steps{ margin-top:6px; }
+  .install-step{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:0.88rem; }
+  .install-step:last-child{ border-bottom:none; }
+  .install-step .n{ font-family:'IBM Plex Mono', monospace; color:var(--teal); min-width:20px; }
+  .install-step code{ background:var(--panel-2); padding:2px 6px; border-radius:5px; font-family:'IBM Plex Mono', monospace; font-size:0.82rem; }
 
   /* ---------- privacy strip ---------- */
-  .privacy{
-    border-top:1px solid var(--line);
-    padding:56px 0;
-  }
-  .privacy-row{
-    display:flex; gap:40px; flex-wrap:wrap;
-  }
-  .privacy-item{ flex:1; min-width:220px; }
-  .privacy-item .mono{ color:var(--teal); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; display:block; margin-bottom:8px; }
-  .privacy-item p{ color:var(--text-dim); font-size:0.92rem; }
+  .privacy{ padding:50px 0; border-top:1px solid var(--line); }
+  .privacy-row{ display:flex; gap:36px; flex-wrap:wrap; }
+  .privacy-item{ flex:1; min-width:200px; }
+  .privacy-item .mono{ color:var(--teal); font-size:0.76rem; text-transform:uppercase; letter-spacing:0.07em; display:block; margin-bottom:6px; }
+  .privacy-item p{ color:var(--text-dim); font-size:0.9rem; }
 
-  /* ---------- install ---------- */
-  .install-box{
-    border:1px solid var(--line); border-radius:16px;
-    background:var(--bg-2);
-    padding:40px;
-  }
-  .install-steps{ counter-reset:inst; margin-top:24px; }
-  .install-step{
-    display:flex; gap:16px; padding:14px 0;
-    border-bottom:1px solid var(--line);
-    font-size:0.94rem;
-  }
-  .install-step:last-child{ border-bottom:none; }
-  .install-step .n{
-    font-family:'IBM Plex Mono', monospace; color:var(--teal);
-    min-width:22px;
-  }
-  .install-step code{
-    background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:5px;
-    font-family:'IBM Plex Mono', monospace; font-size:0.84rem;
-  }
+  /* ---------- links strip ---------- */
+  .links-section{ padding:50px 0 70px; border-top:1px solid var(--line); }
+  .links-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  @media(max-width:760px){ .links-grid{ grid-template-columns:1fr 1fr; } }
+  @media(max-width:480px){ .links-grid{ grid-template-columns:1fr; } }
+  .link-card{ background:var(--panel); padding:22px; transition:background 0.15s; }
+  .link-card:hover{ background:var(--panel-2); }
+  .link-card .l-icon{ font-size:1.1rem; margin-bottom:8px; display:block; }
+  .link-card .l-title{ font-weight:600; font-size:0.92rem; margin-bottom:3px; }
+  .link-card .l-sub{ color:var(--text-faint); font-size:0.8rem; }
 
   /* ---------- footer ---------- */
-  footer{
-    border-top:1px solid var(--line);
-    padding:48px 0 60px;
-  }
-  footer .wrap{
-    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
-  }
-  footer .left{ display:flex; align-items:center; gap:10px; color:var(--text-dim); font-size:0.86rem; }
-  footer .right{ display:flex; gap:22px; font-size:0.86rem; color:var(--text-dim); }
-  footer .right a:hover{ color:var(--text); }
+  footer{ border-top:1px solid var(--line); padding:36px 0 50px; }
+  footer .wrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; }
+  footer .left{ display:flex; align-items:center; gap:10px; color:var(--text-dim); font-size:0.85rem; }
 
   .skip-link{ position:absolute; left:-9999px; }
-  .skip-link:focus{ left:16px; top:16px; background:var(--teal); color:#04201c; padding:8px 14px; border-radius:6px; z-index:100; }
-
+  .skip-link:focus{ left:16px; top:16px; background:var(--teal); color:#fff; padding:8px 14px; border-radius:6px; z-index:100; }
   a:focus-visible, button:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
-
-  @media (prefers-reduced-motion: reduce){
-    .noisy .ghost{ animation:none; opacity:0; }
-    html{ scroll-behavior:auto; }
-  }
 </style>
 </head>
 <body>
@@ -295,12 +224,12 @@
   <div class="wrap">
     <div class="brand">
       <svg class="brand-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect width="24" height="24" rx="6" fill="#0f1719"/>
-        <rect x="3" y="10" width="2" height="4" rx="1" fill="#2dd4bf"/>
-        <rect x="7" y="7" width="2" height="10" rx="1" fill="#39c2c0"/>
-        <rect x="11" y="4" width="2" height="16" rx="1" fill="#37a8c6"/>
-        <rect x="15" y="7" width="2" height="10" rx="1" fill="#368fcc"/>
-        <rect x="19" y="10" width="2" height="4" rx="1" fill="#3b8add"/>
+        <rect width="24" height="24" rx="6" fill="#0f9b8e"/>
+        <rect x="3" y="10" width="2" height="4" rx="1" fill="#fff" opacity="0.95"/>
+        <rect x="7" y="7" width="2" height="10" rx="1" fill="#fff" opacity="0.95"/>
+        <rect x="11" y="4" width="2" height="16" rx="1" fill="#fff"/>
+        <rect x="15" y="7" width="2" height="10" rx="1" fill="#fff" opacity="0.95"/>
+        <rect x="19" y="10" width="2" height="4" rx="1" fill="#fff" opacity="0.95"/>
       </svg>
       VoiceFront
     </div>
@@ -308,187 +237,119 @@
       <a href="#how">How it works</a>
       <a href="#uses">Who it's for</a>
       <a href="#install">Install</a>
+      <a href="#links">Links</a>
     </div>
-    <a class="nav-cta" href="https://github.com/K-Sriharika/VoiceFront" target="_blank" rel="noopener">View on GitHub</a>
+    <span class="live-badge"><span class="dot"></span> Real-time</span>
   </div>
 </nav>
 
 <main id="main">
 
   <!-- HERO -->
-  <section class="hero" style="border-top:none;">
+  <section class="hero">
     <div class="wrap">
-      <div class="eyebrow"><span class="dot"></span> Free · Open source · Runs in your browser</div>
-      <h1>
-        <span class="noisy">
-          <span class="ghost" aria-hidden="true">Hear the dialogue.</span>
-          <span class="clean">Hear the dialogue.</span>
-        </span><br>
-        Silence the noise.
-      </h1>
+      <div class="live-badge" style="margin-bottom:18px;"><span class="dot"></span> Processes live, in your browser</div>
+      <h1>Dialogue clear. <span class="accent">In real time.</span><br>No uploads, no waiting.</h1>
       <p class="lede">
-        VoiceFront separates voice from background music and crowd noise — <strong>live, while you watch</strong>. No uploads, no AI models, no server. Just real-time browser audio, on any stereo video in Chrome.
+        VoiceFront separates voice from background music and crowd noise <strong>as the video plays</strong> — not after you upload it, not after you wait. Drag a slider, hear the change instantly.
       </p>
       <div class="cta-row">
         <a class="btn btn-primary" href="https://github.com/K-Sriharika/VoiceFront" target="_blank" rel="noopener">Get VoiceFront — it's free</a>
         <a class="btn btn-ghost" href="#how">See how it works ↓</a>
       </div>
-      <div class="hero-note mono">tabCapture · zero uploads · 100% local processing</div>
+      <div class="hero-note mono">tabCapture · zero uploads · 100% local processing · MIT licensed</div>
 
-      <div class="mixer-demo" aria-hidden="true">
-        <div class="row">
-          <label><span>🎙 Voice</span><span class="val">180%</span></label>
-          <div class="track"><div class="fill fill-teal" style="width:90%;"></div></div>
+      <div class="hero-media">
+        <div class="media-card">
+          <div class="label"><span>Popup in action</span><span>Screenshot</span></div>
+          <img src="https://github.com/user-attachments/assets/4768b407-c6e0-4677-97ce-5ccc4e2dcaeb" alt="VoiceFront popup showing Voice, Background, and Sharpness sliders over a playing video">
         </div>
-        <div class="row">
-          <label><span>🎵 Background</span><span class="val">15%</span></label>
-          <div class="track"><div class="fill fill-blue" style="width:15%;"></div></div>
-        </div>
-        <div class="row" style="margin-bottom:0;">
-          <label><span>🎯 Sharpness</span><span class="val">4.0</span></label>
-          <div class="track"><div class="fill fill-teal" style="width:65%; opacity:0.6;"></div></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- DEMO VIDEO -->
-  <section style="padding-top:64px;">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="eyebrow mono"><span class="dot"></span> 00 — Watch it work</div>
-        <h2>The slider does what it says.</h2>
-        <p>30 seconds. Real video, real background noise, dragged live.</p>
-      </div>
-      <div class="demo-frame">
-        <video controls preload="metadata" poster="">
-          <source src="https://github.com/user-attachments/assets/4bea47b7-9f7e-48f8-902b-123e90334225" type="video/quicktime">
-          Your browser doesn't support embedded video — <a href="https://github.com/user-attachments/assets/4bea47b7-9f7e-48f8-902b-123e90334225">watch it here</a>.
-        </video>
-      </div>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section id="how">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="eyebrow mono"><span class="dot"></span> 01 — The mechanism</div>
-        <h2>It's position, not magic.</h2>
-        <p>Professionally mixed films and songs place the lead voice dead-centre in the stereo field, while music and ambience spread wide. VoiceFront exploits that — no machine learning required.</p>
-      </div>
-
-      <div class="how-grid">
-        <div class="stereo-art">
-          <div class="field-line"></div>
-          <div class="speaker l">L</div>
-          <div class="speaker r">R</div>
-          <div class="blob blob-music" style="width:64px; height:64px; left:28%;"></div>
-          <div class="blob blob-music" style="width:48px; height:48px; left:38%; top:38%;"></div>
-          <div class="blob blob-music" style="width:56px; height:56px; right:26%;"></div>
-          <div class="blob blob-music" style="width:40px; height:40px; right:36%; top:62%;"></div>
-          <div class="blob blob-voice" style="width:78px; height:78px;">VOICE</div>
-        </div>
-
-        <div class="step-list">
-          <div class="step">
-            <div class="step-num mono">01</div>
-            <div>
-              <h3>Captures your tab's audio</h3>
-              <p>Chrome's tab capture API streams the live audio — nothing leaves your browser.</p>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num mono">02</div>
-            <div>
-              <h3>Runs a live FFT every 512-sample hop</h3>
-              <p>An AudioWorklet breaks the signal into frequency bins, continuously, with no perceptible lag.</p>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num mono">03</div>
-            <div>
-              <h3>Checks left vs. right, per bin</h3>
-              <p>Equal in both channels → centre → voice. Different → panned wide → music or ambience.</p>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-num mono">04</div>
-            <div>
-              <h3>You mix the two back together</h3>
-              <p>Voice and Background become independent, gain-controlled streams — balance them however you like.</p>
-            </div>
+        <div class="media-card">
+          <div class="label"><span>30-second demo</span><span>🔊 with audio</span></div>
+          <video controls preload="metadata">
+            <source src="https://github.com/user-attachments/assets/4bea47b7-9f7e-48f8-902b-123e90334225" type="video/mp4">
+          </video>
+          <div class="video-fallback">
+            Video not loading? <a href="https://github.com/user-attachments/assets/4bea47b7-9f7e-48f8-902b-123e90334225" target="_blank" rel="noopener">Open it directly →</a>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- USE CASES -->
-  <section id="uses">
+  <!-- HOW IT WORKS — quadrant 1 -->
+  <section class="quad-section" id="how">
     <div class="wrap">
-      <div class="section-head">
-        <div class="eyebrow mono"><span class="dot"></span> 02 — Who it's for</div>
-        <h2>Built for the moment you rewind for the third time.</h2>
+      <div class="quad-head">
+        <span class="eyebrow">How it works</span>
+        <h2>Position, not magic — and it never stops to think.</h2>
+        <p>Professionally mixed films and songs place the lead voice dead-centre in the stereo field, while music spreads wide. VoiceFront reads that difference live, every 512 samples, with no machine learning and no round-trip to a server.</p>
       </div>
 
-      <div class="use-grid">
-        <div class="use-card">
-          <span class="icon">😂</span>
-          <h3>Stand-up & sitcoms</h3>
-          <p>Crowd laughter drowning the punchline? Duck the background, keep the joke.</p>
+      <div class="quadrants">
+        <div class="quad">
+          <span class="qnum mono">01 · 02</span>
+          <div class="stereo-art" aria-hidden="true">
+            <div class="field-line"></div>
+            <div class="speaker l">L</div>
+            <div class="speaker r">R</div>
+            <div class="blob blob-music" style="width:50px;height:50px;left:26%;"></div>
+            <div class="blob blob-music" style="width:38px;height:38px;left:36%;top:36%;"></div>
+            <div class="blob blob-music" style="width:44px;height:44px;right:24%;"></div>
+            <div class="blob blob-voice" style="width:64px;height:64px;">VOICE</div>
+          </div>
+          <h3>Capture, then read the stereo field</h3>
+          <p>Chrome's tab capture API streams live audio — nothing leaves your machine. A live FFT checks left vs. right per frequency bin, every 512-sample hop: equal in both channels means centre, meaning voice. Different means panned wide, meaning music or noise.</p>
         </div>
-        <div class="use-card">
-          <span class="icon">🎬</span>
-          <h3>Heavy background scores</h3>
-          <p>Bollywood, action films, prestige dramas — when the score outweighs the actors.</p>
-        </div>
-        <div class="use-card">
-          <span class="icon">👂</span>
-          <h3>Hearing difficulty</h3>
-          <p>Works as both a voice lift and a noise muffler at once — no subtitles required.</p>
-        </div>
-        <div class="use-card">
-          <span class="icon">🌍</span>
-          <h3>Watching in a second language</h3>
-          <p>Clearer dialogue means less missed meaning when you're not a native speaker.</p>
-        </div>
-        <div class="use-card">
-          <span class="icon">🌙</span>
-          <h3>Low-volume, late-night viewing</h3>
-          <p>Keep dialogue intelligible without waking the house with a loud score.</p>
-        </div>
-        <div class="use-card">
-          <span class="icon">🎤</span>
-          <h3>Karaoke mode</h3>
-          <p>Flip it — drop Voice to 0% and what's left is a clean instrumental.</p>
+
+        <div class="quad">
+          <span class="qnum mono">03 · 04</span>
+          <div class="mixer-demo" aria-hidden="true" style="margin-bottom:16px;">
+            <div class="row">
+              <label><span>🎙 Voice</span><span class="val">180%</span></label>
+              <div class="track"><div class="fill fill-teal" style="width:90%;"></div></div>
+            </div>
+            <div class="row">
+              <label><span>🎵 Background</span><span class="val">15%</span></label>
+              <div class="track"><div class="fill fill-blue" style="width:15%;"></div></div>
+            </div>
+            <div class="row" style="margin-bottom:0;">
+              <label><span>🎯 Sharpness</span><span class="val">4.0</span></label>
+              <div class="track"><div class="fill fill-teal" style="width:65%; opacity:0.55;"></div></div>
+            </div>
+          </div>
+          <h3>Mix it back, instantly, your way</h3>
+          <p>Voice and Background become two independent, gain-controlled streams. Move a slider and the change is audible immediately — there's no processing queue, no "rendering," because nothing was ever uploaded in the first place.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CONTROLS -->
-  <section>
+  <!-- WHO IT'S FOR + CONTROLS — quadrant 2 -->
+  <section class="quad-section" id="uses" style="padding-top:0;">
     <div class="wrap">
-      <div class="section-head">
-        <div class="eyebrow mono"><span class="dot"></span> 03 — The controls</div>
-        <h2>Three sliders. That's the whole interface.</h2>
-      </div>
-      <div class="controls-grid">
-        <div class="ctrl-card">
-          <span class="tag">🎙 Voice</span>
-          <h3>Dialogue volume</h3>
-          <p>Boosts the isolated centre-channel speech, independent of everything else playing.</p>
+      <div class="quadrants">
+        <div class="quad">
+          <span class="qnum mono">Who it's for</span>
+          <h3 style="margin-bottom:16px;">Built for the moment you rewind a third time</h3>
+          <div class="use-list">
+            <div class="use-row"><span class="ico">😂</span><span class="t"><strong>Stand-up &amp; sitcoms</strong> — <span>crowd laughter drowning the punchline? Duck the background, keep the joke.</span></span></div>
+            <div class="use-row"><span class="ico">🎬</span><span class="t"><strong>Heavy background scores</strong> — <span>Bollywood, action films, prestige dramas, when the score outweighs the actors.</span></span></div>
+            <div class="use-row"><span class="ico">👂</span><span class="t"><strong>Hearing difficulty</strong> — <span>works as a voice lift and a noise muffler at once, no subtitles required.</span></span></div>
+            <div class="use-row"><span class="ico">🌍</span><span class="t"><strong>Watching in a second language</strong> — <span>clearer dialogue means less missed meaning.</span></span></div>
+            <div class="use-row"><span class="ico">🌙</span><span class="t"><strong>Low-volume, late-night viewing</strong> — <span>keep dialogue intelligible without waking the house.</span></span></div>
+            <div class="use-row"><span class="ico">🎤</span><span class="t"><strong>Karaoke mode</strong> — <span>drop Voice to 0% and what's left is a clean instrumental.</span></span></div>
+          </div>
         </div>
-        <div class="ctrl-card">
-          <span class="tag">🎵 Background</span>
-          <h3>Music & noise volume</h3>
-          <p>Controls everything panned wide — score, ambience, crowd. Drop to zero for voice-only.</p>
-        </div>
-        <div class="ctrl-card">
-          <span class="tag">🎯 Sharpness</span>
-          <h3>Separation strength</h3>
-          <p>Higher isolates more tightly, with more artefacts. Tune per track for the cleanest split.</p>
+
+        <div class="quad">
+          <span class="qnum mono">The controls</span>
+          <h3 style="margin-bottom:16px;">Three sliders. That's the whole interface.</h3>
+          <div class="use-list">
+            <div class="use-row"><span class="ico">🎙</span><span class="t"><strong>Voice</strong> — <span>boosts the isolated centre-channel speech, independent of everything else playing.</span></span></div>
+            <div class="use-row"><span class="ico">🎵</span><span class="t"><strong>Background</strong> — <span>controls everything panned wide — score, ambience, crowd. Drop to zero for voice-only.</span></span></div>
+            <div class="use-row"><span class="ico">🎯</span><span class="t"><strong>Sharpness</strong> — <span>higher isolates more tightly, with more artefacts. Tune per track for the cleanest split.</span></span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -498,36 +359,23 @@
   <section class="privacy">
     <div class="wrap">
       <div class="privacy-row">
-        <div class="privacy-item">
-          <span class="mono">No uploads</span>
-          <p>Audio is processed entirely inside your browser tab. Nothing is sent anywhere.</p>
-        </div>
-        <div class="privacy-item">
-          <span class="mono">No AI models</span>
-          <p>Pure signal processing — a live FFT and a stereo panning mask. No cloud inference.</p>
-        </div>
-        <div class="privacy-item">
-          <span class="mono">No server</span>
-          <p>There's nothing to be down. It runs, fully, on your machine.</p>
-        </div>
-        <div class="privacy-item">
-          <span class="mono">No cost</span>
-          <p>Free and MIT licensed. Read the source, fork it, build on it.</p>
-        </div>
+        <div class="privacy-item"><span class="mono">No uploads</span><p>Audio is processed entirely inside your browser tab. Nothing is sent anywhere.</p></div>
+        <div class="privacy-item"><span class="mono">No AI models</span><p>Pure signal processing — a live FFT and a stereo panning mask. No cloud inference.</p></div>
+        <div class="privacy-item"><span class="mono">No server</span><p>There's nothing to be down. It runs, fully, on your machine, in real time.</p></div>
+        <div class="privacy-item"><span class="mono">No cost</span><p>Free and MIT licensed. Read the source, fork it, build on it.</p></div>
       </div>
     </div>
   </section>
 
   <!-- INSTALL -->
-  <section id="install">
+  <section class="quad-section" id="install" style="padding-top:0;">
     <div class="wrap">
-      <div class="section-head">
-        <div class="eyebrow mono"><span class="dot"></span> 04 — Get it running</div>
-        <h2>Two minutes, no developer experience needed.</h2>
+      <div class="quad-head">
+        <span class="eyebrow">Get it running</span>
+        <h2>Two minutes. No developer experience needed.</h2>
       </div>
-
-      <div class="install-box">
-        <div class="cta-row" style="margin-bottom:0;">
+      <div class="quad" style="border:1px solid var(--line); border-radius:16px;">
+        <div class="cta-row" style="margin-bottom:18px;">
           <a class="btn btn-primary" href="https://github.com/K-Sriharika/VoiceFront" target="_blank" rel="noopener">Download from GitHub</a>
         </div>
         <div class="install-steps">
@@ -541,25 +389,72 @@
     </div>
   </section>
 
+  <!-- LINKS -->
+  <section class="links-section" id="links">
+    <div class="wrap">
+      <div class="quad-head">
+        <span class="eyebrow">Everywhere VoiceFront lives</span>
+        <h2>Links</h2>
+      </div>
+      <div class="links-grid">
+        <a class="link-card" href="https://github.com/K-Sriharika/VoiceFront" target="_blank" rel="noopener">
+          <span class="l-icon">💻</span>
+          <div class="l-title">GitHub repo</div>
+          <div class="l-sub">Source code, install</div>
+        </a>
+        <a class="link-card" href="https://github.com/K-Sriharika/VoiceFront#readme" target="_blank" rel="noopener">
+          <span class="l-icon">📘</span>
+          <div class="l-title">README</div>
+          <div class="l-sub">Full documentation</div>
+        </a>
+        <a class="link-card" href="https://github.com/K-Sriharika/VoiceFront/issues" target="_blank" rel="noopener">
+          <span class="l-icon">🐛</span>
+          <div class="l-title">Report an issue</div>
+          <div class="l-sub">Bugs &amp; requests</div>
+        </a>
+        <a class="link-card" href="https://github.com/K-Sriharika/VoiceFront/blob/main/LICENSE" target="_blank" rel="noopener">
+          <span class="l-icon">⚖️</span>
+          <div class="l-title">MIT License</div>
+          <div class="l-sub">Free to use &amp; fork</div>
+        </a>
+        <a class="link-card" href="https://github.com/K-Sriharika" target="_blank" rel="noopener">
+          <span class="l-icon">👩‍💻</span>
+          <div class="l-title">K. Sriharika</div>
+          <div class="l-sub">GitHub profile</div>
+        </a>
+        <a class="link-card" href="https://github.com/user-attachments/assets/4bea47b7-9f7e-48f8-902b-123e90334225" target="_blank" rel="noopener">
+          <span class="l-icon">🎬</span>
+          <div class="l-title">Demo video</div>
+          <div class="l-sub">Watch with sound</div>
+        </a>
+        <a class="link-card" href="https://chrome.google.com/webstore/devconsole" target="_blank" rel="noopener">
+          <span class="l-icon">🧩</span>
+          <div class="l-title">Chrome Web Store</div>
+          <div class="l-sub">Listing coming soon</div>
+        </a>
+        <a class="link-card" href="https://github.com/K-Sriharika/VoiceFront/graphs/traffic" target="_blank" rel="noopener">
+          <span class="l-icon">📊</span>
+          <div class="l-title">Traffic stats</div>
+          <div class="l-sub">Clones &amp; visitors</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <footer>
   <div class="wrap">
     <div class="left">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect width="24" height="24" rx="6" fill="#0f1719"/>
-        <rect x="3" y="10" width="2" height="4" rx="1" fill="#2dd4bf"/>
-        <rect x="7" y="7" width="2" height="10" rx="1" fill="#39c2c0"/>
-        <rect x="11" y="4" width="2" height="16" rx="1" fill="#37a8c6"/>
-        <rect x="15" y="7" width="2" height="10" rx="1" fill="#368fcc"/>
-        <rect x="19" y="10" width="2" height="4" rx="1" fill="#3b8add"/>
+        <rect width="24" height="24" rx="6" fill="#0f9b8e"/>
+        <rect x="3" y="10" width="2" height="4" rx="1" fill="#fff" opacity="0.95"/>
+        <rect x="7" y="7" width="2" height="10" rx="1" fill="#fff" opacity="0.95"/>
+        <rect x="11" y="4" width="2" height="16" rx="1" fill="#fff"/>
+        <rect x="15" y="7" width="2" height="10" rx="1" fill="#fff" opacity="0.95"/>
+        <rect x="19" y="10" width="2" height="4" rx="1" fill="#fff" opacity="0.95"/>
       </svg>
-      Built by K. Sriharika · MIT Licensed
-    </div>
-    <div class="right">
-      <a href="https://github.com/K-Sriharika/VoiceFront" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/K-Sriharika/VoiceFront#readme" target="_blank" rel="noopener">README</a>
-      <a href="https://github.com/K-Sriharika/VoiceFront/issues" target="_blank" rel="noopener">Report an issue</a>
+      Built by K. Sriharika · MIT Licensed · Runs entirely in real time, in your browser
     </div>
   </div>
 </footer>
